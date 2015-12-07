@@ -1,0 +1,73 @@
+---
+
+#Setup cconstantine user
+- hosts: all
+  remote_user: ubuntu
+  sudo: yes
+  tasks:
+  - name: Create group for passwordless users
+    group:
+      name: passwordless_sudo
+      state: present
+  - name: Allow passwordless sudo
+    lineinfile:
+      insertafter: EOF
+      dest: /etc/sudoers
+      line: '%passwordless_sudo ALL=(ALL) NOPASSWD: ALL'
+      regexp: 'passwordless_sudo'
+      state: present
+
+  - name: Create cconstantine user
+    user:
+      name: cconstantine
+      groups: admin,passwordless_sudo
+      append: true
+      shell: /bin/bash
+  - name: Install authorized_key
+    authorized_key:
+      user: cconstantine
+      key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+        
+
+# Install some basic things
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: Install some basic tools
+      apt:
+        name: "{{ item }}"
+      with_items:
+        - awscli
+        - htop
+
+    - name: Install Docker apt gpg key
+      apt_key: 
+        keyserver: 'hkp://p80.pool.sks-keyservers.net:80'
+        id: 58118E89F3A912897C070ADBF76221572C52609D
+
+    - name: add Docker apt source
+      apt_repository:
+        repo: 'deb https://apt.dockerproject.org/repo ubuntu-trusty main'
+
+    - name: Grab kernel version
+      shell: 'uname -r'
+      changed_when: false
+      register: kernel_version
+      
+    - name: Install kernal extras
+      apt:
+        name: 'linux-image-extra-{{kernel_version.stdout}}'
+
+    - name: Install Docker
+      apt:
+        name: docker-engine
+        
+    - name: Create docker user
+      user:
+        name: docker
+        groups: docker
+        append: true
+        shell: /bin/bash
+  roles:
+    - role: tubes
+

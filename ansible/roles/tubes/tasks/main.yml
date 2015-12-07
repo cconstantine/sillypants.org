@@ -1,0 +1,7 @@
+---
+
+- name: Install Upstart unit for tubes
+  template: 
+    src: tubes.conf
+    dest: /etc/init/tubes.conf
+  notify: restart tubes
