@@ -23,10 +23,13 @@
       groups: admin,passwordless_sudo
       append: true
       shell: /bin/bash
+
   - name: Install authorized_key
     authorized_key:
       user: cconstantine
-      key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      key: "{{ lookup('file', item) }}"
+    with_fileglob:
+      - ssh_keys/*.pub
         
 
 # Install some basic things
