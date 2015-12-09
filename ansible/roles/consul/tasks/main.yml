@@ -1,0 +1,7 @@
+---
+- stat: path=/bin/consul
+  register: consul_bin
+
+- include: install.yml
+  when: consul_bin.stat.exists == false
+
