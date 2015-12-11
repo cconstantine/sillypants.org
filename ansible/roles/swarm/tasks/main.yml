@@ -1,0 +1,12 @@
+---
+- name: Install Upstart unit for docker swarm
+  template: 
+    src: swarm.conf
+    dest: /etc/init/swarm.conf
+  notify: restart swarm
+
+- name: Install Upstart unit for docker swarm manager
+  template: 
+    src: swarm_manager.conf
+    dest: /etc/init/swarm_manager.conf
+  notify: restart swarm_manager

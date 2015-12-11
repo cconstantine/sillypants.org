@@ -5,6 +5,7 @@
   remote_user: ubuntu
   sudo: yes
   tasks:
+  - hostname: name="{{ inventory_hostname_short }}"
   - name: Create group for passwordless users
     group:
       name: passwordless_sudo
@@ -30,4 +31,4 @@
       key: "{{ lookup('file', item) }}"
     with_fileglob:
       - ssh_keys/*.pub
-    tags: ssh_keys        
+  

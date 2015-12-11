@@ -1,0 +1,39 @@
+---
+- name: Install Docker apt gpg key
+  apt_key: 
+    keyserver: 'hkp://p80.pool.sks-keyservers.net:80'
+    id: 58118E89F3A912897C070ADBF76221572C52609D
+
+- name: add Docker apt source
+  apt_repository:
+    repo: 'deb https://apt.dockerproject.org/repo ubuntu-wily main'
+
+- name: Grab kernel version
+  shell: 'uname -r'
+  changed_when: false
+  register: kernel_version
+      
+- name: Install kernal extras
+  apt:
+    name: 'linux-image-extra-{{kernel_version.stdout}}'
+
+- name: Install Docker
+  apt:
+    name: docker-engine
+        
+- name: Create docker user
+  user:
+    name: docker
+    groups: docker
+    append: true
+    shell: /bin/bash
+
+- name: Listen on tcp
+  template:
+    src: docker-tcp.service
+    dest: /etc/systemd/system/docker-tcp.socket
+  register: docker_tcp
+
+- name: notify systemd of config changes
+  shell: systemctl daemon-reload && systemctl enable docker-tcp.socket && systemctl stop docker && systemctl start docker-tcp.socket && systemctl start docker
+  when: docker_tcp.changed

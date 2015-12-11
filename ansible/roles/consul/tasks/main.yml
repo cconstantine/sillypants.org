@@ -5,3 +5,23 @@
 - include: install.yml
   when: consul_bin.stat.exists == false
 
+- name: Create data dir
+  file:
+    path: /var/consul
+    state: directory
+    
+- name: Consult config
+  template:
+    src: config.json.j2
+    dest: /etc/consul.json
+  register: consul_config
+
+- name: Install Upstart unit for consul
+  template: 
+    src: consul.service
+    dest: /etc/init/consul.conf
+  register: consul_service
+
+- name: notify systemd of config changes
+  shell: systemctl daemon-reload && systemctl enable consul.service systemctl start consul.service
+  when: consul_service.changed or consul_config.changed

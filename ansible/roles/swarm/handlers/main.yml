@@ -1,0 +1,9 @@
+- name: restart swarm
+  service:
+    name: swarm
+    state: restarted
+
+- name: restart swarm_manager
+  service:
+    name: swarm_manager
+    state: restarted
