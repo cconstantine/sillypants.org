@@ -1,0 +1,13 @@
+Unit]
+Description=swarm agent
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=on-failure
+ExecStart=docker run --rm swarm join --addr={{inventory_hostname_short}}:2375 consul://{{inventory_hostname_short}}:8500/nodes
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

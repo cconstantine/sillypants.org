@@ -1,5 +1,5 @@
 resource "aws_instance" "web" {
-  ami = "ami-e54f5f84" #ami-534d5d32"
+  ami = "ami-e54f5f84"
   instance_type = "t1.micro"
 	key_name = "${aws_key_pair.thunk-cconstantine.id}"
   tags {
@@ -38,8 +38,9 @@ variable "swarm_count" {
 }
 
 resource "aws_instance" "swarm" {
-#  ami = "ami-e54f5f84"
-  ami = "ami-a9435ec8"
+#  ami = "ami-e54f5f84" # ubuntu 14.04lts
+#  ami = "ami-a9435ec8" #ubuntu 15.10
+	ami = "ami-ed8eb7dd" #debian jessie
   instance_type = "t1.micro"
 	key_name = "${aws_key_pair.thunk-cconstantine.id}"
   count = "${var.swarm_count}"

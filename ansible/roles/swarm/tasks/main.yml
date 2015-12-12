@@ -1,12 +1,30 @@
 ---
-- name: Install Upstart unit for docker swarm
-  template: 
-    src: swarm.conf
-    dest: /etc/init/swarm.conf
-  notify: restart swarm
 
-- name: Install Upstart unit for docker swarm manager
-  template: 
-    src: swarm_manager.conf
-    dest: /etc/init/swarm_manager.conf
-  notify: restart swarm_manager
+- name: Swarm
+  docker:
+    name: swarm
+    image: swarm
+    command: "join --addr={{inventory_hostname_short}}:2375 consul://{{inventory_hostname_short}}:8500/nodes"
+
+- name: Swarm Managers
+  docker:
+    name: swarm_manager
+    image: swarm
+    command: "manage -H :4000 --advertise {{inventory_hostname_short}}:4000 --replication consul://{{inventory_hostname_short}}:8500/nodes"
+    expose:
+      - "4000"
+    ports:
+      - "4000:4000"
+
+
+#- name: Install Upstart unit for docker swarm
+#  template: 
+#    src: swarm.service
+#    dest: /etc/systemd/system/swarm.service
+#  notify: restart swarm
+
+#- name: Install Upstart unit for docker swarm manager
+#  template: 
+#    src: swarm_manager.service
+#    dest: /etc/systemd/system/swarm_manager.service
+#  notify: restart swarm_manager

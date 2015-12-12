@@ -2,7 +2,7 @@
 
 #Setup cconstantine user
 - hosts: all
-  remote_user: ubuntu
+  remote_user: "{{ rootlike_user }}"
   sudo: yes
   tasks:
   - hostname: name="{{ inventory_hostname_short }}"
@@ -31,4 +31,4 @@
       key: "{{ lookup('file', item) }}"
     with_fileglob:
       - ssh_keys/*.pub
-  
+      

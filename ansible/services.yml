@@ -1,14 +1,31 @@
 
 # Install some basic things
-- hosts: silly_pants
+- hosts: all
   sudo: yes
   tasks:
+    - name: Update sources
+      apt:
+        update_cache: true
     - name: Install some basic tools
       apt:
         name: "{{ item }}"
       with_items:
-        - awscli
         - htop
+        - awscli
+        - python-setuptools
+        - python-dev
+
+    - name: Install pip
+      easy_install:
+        name: pip
+
+    - name: Python dependency for working with docker
+      pip:
+        name: docker-py
+
+# Install some basic things
+- hosts: sillypants_org
+  sudo: yes
   roles:
     - role: tubes
     - role: docker
@@ -18,4 +35,4 @@
   roles:
     - role: consul
     - role: docker
-#    - role: swarm
+    - role: swarm

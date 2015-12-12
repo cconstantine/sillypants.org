@@ -6,16 +6,7 @@
 
 - name: add Docker apt source
   apt_repository:
-    repo: 'deb https://apt.dockerproject.org/repo ubuntu-wily main'
-
-- name: Grab kernel version
-  shell: 'uname -r'
-  changed_when: false
-  register: kernel_version
-      
-- name: Install kernal extras
-  apt:
-    name: 'linux-image-extra-{{kernel_version.stdout}}'
+    repo: "{{ docker_repo }}"
 
 - name: Install Docker
   apt:
@@ -32,8 +23,14 @@
   template:
     src: docker-tcp.service
     dest: /etc/systemd/system/docker-tcp.socket
-  register: docker_tcp
+  register: docker_restart
+
+- name: Docker service
+  template:
+    src: docker.service
+    dest: /lib/systemd/system/docker.service
+  register: docker_restart
 
 - name: notify systemd of config changes
   shell: systemctl daemon-reload && systemctl enable docker-tcp.socket && systemctl stop docker && systemctl start docker-tcp.socket && systemctl start docker
-  when: docker_tcp.changed
+  when: docker_restart.changed
