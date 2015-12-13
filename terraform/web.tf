@@ -34,13 +34,13 @@ resource "aws_route53_record" "wildcard_sillypants_org" {
 }
 
 variable "swarm_count" {
-  default = "3"
+  default = "0"
 }
 
 resource "aws_instance" "swarm" {
 #  ami = "ami-e54f5f84" # ubuntu 14.04lts
-#  ami = "ami-a9435ec8" #ubuntu 15.10
-	ami = "ami-ed8eb7dd" #debian jessie
+  ami = "ami-a9435ec8" #ubuntu 15.10
+#	ami = "ami-ed8eb7dd" #debian jessie
   instance_type = "t1.micro"
 	key_name = "${aws_key_pair.thunk-cconstantine.id}"
   count = "${var.swarm_count}"
@@ -64,3 +64,4 @@ resource "aws_route53_record" "swarm_sillypants_org" {
 
    records = ["${element(aws_instance.swarm.*.public_dns, count.index)}"]
 }
+
