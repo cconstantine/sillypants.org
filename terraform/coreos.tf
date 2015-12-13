@@ -17,12 +17,38 @@ resource "aws_instance" "coreos" {
 #cloud-config
 
 hostname: "coreos-${count.index}"
+
+write_files:
+  - path: "/etc/systemd/resolved.conf"
+    owner: "root"
+    permissions: "0644"
+    content: |
+      [Resolve]
+      DNS=127.0.0.1
+
+
 coreos:
   units:
     - name: "etcd2.service"
       command: "start"
     - name: "fleet.service"
       command: "start"
+    - name: "systemd-resolved.service"
+      command: "restart"
+
+  units:
+    - name: "docker-redis.service"
+      command: "start"
+      content: |
+        [Unit]
+        Description=SkyDNS etcd based resolver
+        After=etcd2.service
+
+        [Service]
+        Restart=always
+        ExecStart=/usr/bin/docker run -e ETCD_MACHINES=http://coreos-${count.index}.sillypants.org:2379 --net host --rm --name skydns skynetservices/skydns:latest
+        ExecStop=/usr/bin/docker kill skydns
+
   etcd2:
     name: "coreos-${count.index}"
     discovery-srv: "sillypants.org"
@@ -42,6 +68,7 @@ users:
       - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDYAV4ex4s5vQpJTVJfvy9J8kVdV0iJ/cRBQvoUMguJjkja9oiaEJqMOM9mQA8onM51IOoKdbicaRSpvp0GPkUo/0doGmRqMJBeT/jXfhrY3oHjhVkbjzdmf3MVKBSfyz8P4r7lWk6ydNDOJpCS/C4iVbb4zkttY/4lijfGDhTasVt9Qk/I2jdc3GFrD14Q8ahv8+M/QeUrYpIEfUlAP48+/i33aEZU3YGJ9ya7SFGSkmHANSKt498go3FBaou/nXNo1NZpGrM35uRlk0qdX03CF9kl2KHKtz/5H0xKtzNczCjFlEul5tu7NmXVjzAyxr0ceCJ3FcUqSba+5lkC1ui3 cconstantine@thunk"
       - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpEL7Gy6uWwQ7fEzn2U7vc9XTvsjZhrVz/lzNhJYVsR09IUGOJRcEj4DjzqCZDPNzRYG8dxasWbOpow2NaLM/iaBhWA+gT3gaDD26EwwxhtBDsk84gTo9RwVsZoo29a1IUsgUWyzGoAoRE8IDwvz1afkTwzydyEU00U9ns9gxgMKkOjmVTdQAxihNZElBvXJ4rKqqnInNZlYs7S+FNi+A4zFTBZ4rndh/cI9kRVx7/WKdxfgso6KgSisCuV+2rcpbeV6Y+7JPlvbefcqux7Q8aXeTCP2HGJV6/aAr3yNleMC8DT0FuBo5l84QVJhgXfYDlTkTAAS62/7O2vav4TcGd cconstantine@fig.local"
       - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCym7EuaOFC1MGPko2z+1LgXDrI9MdnAhYx2CrohIKyPXdQ/8LYl4c0cXUymmHEw5emt/WWoyl4PnBhhpQypNt6w5ebdZvXkt2c5hlY79gC+R8lPTEMl0UvhhQwLTFuhC8ZjyPhTj4DENicLNccmHoWTLaSOkvePagfmDmOGuuJRL280+ddPv25NdtwsYn/hgxk0JStoteVRKFcORjkYcwWrxqwU8gIVzmWiViZdjNkldgCiebzMUfm0uFelt6CiT2oeGb4elPwkt+1O6cATSJmyP1CbxsLLzCHsbfX/kQVdqpJZO+7BexJFYqT1WJ/kQnDWounktWEqs/o5YgQbcpj cconstantine@think"
+
 EOF
 
 	iam_instance_profile = "${aws_iam_instance_profile.s3_profile.name}"
