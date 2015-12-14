@@ -24,20 +24,86 @@ write_files:
     permissions: "0644"
     content: |
       [Resolve]
-      DNS=127.0.0.1
+      DNS=$private_ipv4
+  - path: "/etc/nginx/nginx.conf"
+    owner: "root"
+    permissions: "0644"
+    content: |
+      worker_processes 4;
+      events {
+        worker_connections 768;
+        # multi_accept on;
+      }
+      http {
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        gzip on;
+        gzip_disable "msie6";
+        server {
+          server_name ~^(?<app>.+)\.sillypants\.org$;
+          location / {
+            resolver $private_ipv4;
+            proxy_pass http://$app.skydns.local:5000/;
+          }
+        }
+      }
 
 
 coreos:
   units:
     - name: "etcd2.service"
       command: "start"
+    - name: flanneld.service
+      drop-ins:
+        - name: 50-network-config.conf
+          content: |
+            [Service]
+            ExecStartPre=/usr/bin/etcdctl set /coreos.com/network/config '{ "Network": "10.1.0.0/16" }'
+      command: start
+    - name: docker.service
+      drop-ins:
+        - name: 50-flannel.conf
+          content: |
+            [Unit]
+            Requires=flanneld.service
+            After=flanneld.service
+      command: start
+    - name: "nginx.service"
+      command: "start"
+      content: |
+        [Unit]
+        Description=Nginx proxy
+        After=docker.service
+
+        [Service]
+        Restart=always
+        ExecStart=/usr/bin/docker run --rm --name=nginx -v /etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro -p 80:80 nginx
+        ExecStop=/usr/bin/docker kill nginx
+
+        [X-Fleet]
+        Global=true
+
     - name: "fleet.service"
       command: "start"
     - name: "systemd-resolved.service"
       command: "restart"
+    - name: "registrator.service"
+      command: "start"
+      content: |
+        [Unit]
+        Description=Docker service registrator
+        After=docker.service
+        After=etcd2.service
 
-  units:
-    - name: "docker-redis.service"
+        [Service]
+        Restart=always
+        ExecStart=/usr/bin/docker run --rm --name=registrator -v /var/run/docker.sock:/tmp/docker.sock gliderlabs/registrator:latest -internal=true skydns2://coreos-${count.index}.sillypants.org:2379/local/skydns
+        ExecStop=/usr/bin/docker kill registrator 						
+
+    - name: "skydns.service"
       command: "start"
       content: |
         [Unit]
@@ -46,7 +112,7 @@ coreos:
 
         [Service]
         Restart=always
-        ExecStart=/usr/bin/docker run -e ETCD_MACHINES=http://coreos-${count.index}.sillypants.org:2379 --net host --rm --name skydns skynetservices/skydns:latest
+        ExecStart=/usr/bin/docker run -e SKYDNS_ADDR=0.0.0.0:53 -e ETCD_MACHINES=http://coreos-${count.index}.sillypants.org:2379 --net host --rm --name skydns skynetservices/skydns:latest
         ExecStop=/usr/bin/docker kill skydns
 
   etcd2:
@@ -99,4 +165,12 @@ resource "aws_route53_record" "etcd_coreos_sillypants_org" {
 
    records = [["${formatlist("0 0 2380 %s.sillypants.org.", aws_route53_record.coreos_sillypants_org.*.name)}"]
 
+}
+
+resource "aws_route53_record" "sillypants_org" {
+   zone_id = "ZU7CFKBZNQZFU"
+   name = "sillypants.org"
+   type = "A"
+   ttl = "1"
+   records = ["${aws_instance.coreos.*.public_ip}"]
 }

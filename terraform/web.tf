@@ -17,14 +17,6 @@ resource "aws_eip" "lb" {
     vpc = true
 }
 
-resource "aws_route53_record" "sillypants_org" {
-   zone_id = "ZU7CFKBZNQZFU"
-   name = "sillypants.org"
-   type = "A"
-   ttl = "1"
-   records = ["${aws_eip.lb.public_ip}"]
-}
-
 resource "aws_route53_record" "wildcard_sillypants_org" {
    zone_id = "ZU7CFKBZNQZFU"
    name = "*.sillypants.org"
