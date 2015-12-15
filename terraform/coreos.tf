@@ -100,7 +100,7 @@ coreos:
 
         [Service]
         Restart=always
-        ExecStart=/usr/bin/docker run --rm --name=registrator -v /var/run/docker.sock:/tmp/docker.sock gliderlabs/registrator:latest -internal=true skydns2://coreos-${count.index}.sillypants.org:2379/local/skydns
+        ExecStart=/usr/bin/docker run --rm --name=registrator -v /var/run/docker.sock:/tmp/docker.sock gliderlabs/registrator:latest -internal=true skydns2://coreos-${count.index}.sillycluster.net:2379/local/skydns
         ExecStop=/usr/bin/docker kill registrator 						
 
     - name: "skydns.service"
@@ -112,18 +112,18 @@ coreos:
 
         [Service]
         Restart=always
-        ExecStart=/usr/bin/docker run -e SKYDNS_ADDR=0.0.0.0:53 -e ETCD_MACHINES=http://coreos-${count.index}.sillypants.org:2379 --net host --rm --name skydns skynetservices/skydns:latest
+        ExecStart=/usr/bin/docker run -e SKYDNS_ADDR=0.0.0.0:53 -e ETCD_MACHINES=http://coreos-${count.index}.sillycluster.net:2379 --net host --rm --name skydns skynetservices/skydns:latest
         ExecStop=/usr/bin/docker kill skydns
 
   etcd2:
     name: "coreos-${count.index}"
-    discovery-srv: "sillypants.org"
-    advertise-client-urls: "http://coreos-${count.index}.sillypants.org:2379"
-    initial-advertise-peer-urls: "http://coreos-${count.index}.sillypants.org:2380"
+    discovery-srv: "sillycluster.net"
+    advertise-client-urls: "http://coreos-${count.index}.sillycluster.net:2379"
+    initial-advertise-peer-urls: "http://coreos-${count.index}.sillycluster.net:2380"
     listen-client-urls: "http://0.0.0.0:2379"
-    listen-peer-urls: "http://coreos-${count.index}.sillypants.org:2380"
+    listen-peer-urls: "http://coreos-${count.index}.sillycluster.net:2380"
     initial-cluster-state: new
-    initial-cluster-token: "sillypants-org"
+    initial-cluster-token: "sillycluster_net"
 
 users:
   - name: "cconstantine"
@@ -137,7 +137,6 @@ users:
 
 EOF
 
-	iam_instance_profile = "${aws_iam_instance_profile.s3_profile.name}"
   vpc_security_group_ids = [
     "sg-4ad7fc2e",
     "${aws_security_group.allow_all_ssh.id}",
@@ -145,8 +144,8 @@ EOF
 }
 
 
-resource "aws_route53_record" "coreos_sillypants_org" {
-   zone_id = "ZU7CFKBZNQZFU"
+resource "aws_route53_record" "coreos_sillycluster_net" {
+   zone_id = "ZPYZBFHONNSZM"
    name = "coreos-${count.index}"
    type = "CNAME"
    ttl = "1"
@@ -156,21 +155,14 @@ resource "aws_route53_record" "coreos_sillypants_org" {
 }
 
 
-resource "aws_route53_record" "etcd_coreos_sillypants_org" {
-   zone_id = "ZU7CFKBZNQZFU"
+resource "aws_route53_record" "etcd_coreos_sillycluster_net" {
+   zone_id = "ZPYZBFHONNSZM"
    name = "_etcd-server._tcp"
    type = "SRV"
    ttl = "1"
   count = "${var.coreos_count}"
 
-   records = [["${formatlist("0 0 2380 %s.sillypants.org.", aws_route53_record.coreos_sillypants_org.*.name)}"]
+   records = [["${formatlist("0 0 2380 %s.sillycluster.net.", aws_route53_record.coreos_sillycluster_net.*.name)}"]
 
 }
 
-resource "aws_route53_record" "sillypants_org" {
-   zone_id = "ZU7CFKBZNQZFU"
-   name = "sillypants.org"
-   type = "A"
-   ttl = "1"
-   records = ["${aws_instance.coreos.*.public_ip}"]
-}
