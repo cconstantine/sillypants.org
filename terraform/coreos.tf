@@ -103,7 +103,7 @@ write_files:
           server_name ~^(?<app>.+)\.sillypants\.org$;
           location / {
             resolver $private_ipv4;
-            proxy_pass http://$app.skydns.local:5000/;
+            proxy_pass http://$app.skydns.local:5000;
           }
         }
       }
