@@ -4,7 +4,7 @@ resource "aws_route53_record" "sillypants_org" {
    name = "sillypants.org"
    type = "A"
    ttl = "1"
-   records = ["${aws_instance.coreos.0.public_ip}"]
+   records = ["${aws_instance.coreos.*.public_ip}"]
 }
 
 resource "aws_route53_record" "wildcard_sillypants_org" {
