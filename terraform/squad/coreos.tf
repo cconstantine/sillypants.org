@@ -3,66 +3,83 @@ variable "instance_count" {
   default = "3"
 }
 
-resource "aws_route53_zone" "coreos_zone" {
-  name = "coreos.sillycluster.net"
+
+variable "domain_suffix" {
+  default = "sillycluster.net"
 }
 
 
-resource "aws_route53_record" "coreos_ns" {
+variable "etcd2_cluster_state" {
+  default = "existing"
+}
+
+variable "instance_name" { }
+variable "discovery_srv" { }
+variable "instance_profile" { }
+variable "vpc_security_group_ids" {}
+variable "keypair" {}
+
+output "instance_cnames" {
+  value = "${join(",", aws_route53_record.instance_CNAME.*.fqdn)}"
+}
+
+output "instance_public_ips" {
+  value = "${join(",", aws_instance.instance.*.public_ip)}"
+}
+
+output "instance_private_ips" {
+  value = "${join(",", aws_instance.instance.*.private_ip)}"
+}
+
+output "instances" {
+  value = "${instance_count}"
+}
+
+resource "aws_route53_zone" "instance_zone" {
+  name = "${var.instance_name}.${var.domain_suffix}"
+}
+
+resource "aws_route53_record" "instance_ns" {
     zone_id = "ZPYZBFHONNSZM"
-    name = "coreos.sillycluster.net"
+    name = "${var.instance_name}.${var.domain_suffix}"
     type = "NS"
     ttl = "30"
     records = [
-        "${aws_route53_zone.coreos_zone.name_servers.0}",
-        "${aws_route53_zone.coreos_zone.name_servers.1}",
-        "${aws_route53_zone.coreos_zone.name_servers.2}",
-        "${aws_route53_zone.coreos_zone.name_servers.3}"
+        "${aws_route53_zone.instance_zone.name_servers.0}",
+        "${aws_route53_zone.instance_zone.name_servers.1}",
+        "${aws_route53_zone.instance_zone.name_servers.2}",
+        "${aws_route53_zone.instance_zone.name_servers.3}"
     ]
 }
-resource "aws_route53_record" "coreos_sillycluster_net" {
-   zone_id = "${aws_route53_zone.coreos_zone.zone_id}"
+resource "aws_route53_record" "instance_CNAME" {
+   zone_id = "${aws_route53_zone.instance_zone.zone_id}"
    name = "n${count.index}"
    type = "CNAME"
    ttl = "1"
    count = "${var.instance_count}"
 
-   records = ["${element(aws_instance.coreos.*.public_dns, count.index)}"]
+   records = ["${element(aws_instance.instance.*.public_dns, count.index)}"]
 }
 
-resource "aws_route53_record" "etcd_coreos_sillycluster_net" {
-   zone_id = "${aws_route53_zone.coreos_zone.zone_id}"
-   name = "_etcd-server._tcp"
-   type = "SRV"
-   ttl = "1"
-   count = "${var.instance_count}"
-
-   records = [["${formatlist("0 0 2380 %s", aws_instance.coreos.*.private_ip)}"]
-}
-
-resource "aws_instance" "coreos" {
-#  ami = "ami-fbc3d19a" #Coreos beta
-#  ami = "ami-29667a48" #Coreos alpha
+resource "aws_instance" "instance" {
   ami = "ami-13607c72" #Coreos alpha HVM
   instance_type = "t2.micro"
-	key_name = "${aws_key_pair.thunk-cconstantine.id}"
+	key_name = "${var.keypair}"
   count = "${var.instance_count}"
 
-	availability_zone = "${lookup(var.availabillity_zones, count.index % 3)}"
+	availability_zone = "${var.region}${lookup(var.availabillity_zones, count.index % 3)}"
+	iam_instance_profile = "${var.instance_profile}"
 
   tags {
-    Name = "coreos-${count.index}"
+    Name = "${var.instance_name}-${count.index}"
   }
 
-  vpc_security_group_ids = [
-    "sg-4ad7fc2e",
-    "${aws_security_group.allow_all_ssh.id}",
-    "${aws_security_group.allow_all_web.id}"]
+  vpc_security_group_ids = ["${split(",", var.vpc_security_group_ids)}"]
 
   user_data = <<EOF
 #cloud-config
 
-hostname: "n${count.index}.coreos.sillycluster.net"
+hostname: "n${count.index}.${var.instance_name}.${var.domain_suffix}"
 
 write_files:
   - path: "/etc/systemd/resolved.conf"
@@ -76,7 +93,7 @@ coreos:
   update:
     reboot-strategy: best-effort
   fleet:
-    metadata: "region=us-west-2,network=dmz"
+    metadata: "region=us-west-2,type=${var.instance_name}"
   units:
     - name: "etcd2.service"
       command: "start"
@@ -104,7 +121,7 @@ coreos:
 
         [Service]
         Restart=always
-        ExecStart=/usr/bin/docker run --rm --name=n${count.index}.coreos -e GOMAXPROCS=2 --net host cconstantine/consul-server:0.6 --bootstrap-expect ${var.instance_count} -advertise $private_ipv4 -retry-join n${count.index + 1 % var.instance_count}.coreos.sillycluster.net -ui-dir /ui
+        ExecStart=/usr/bin/docker run --rm --name=n${count.index}.${var.instance_name} -e GOMAXPROCS=2 --net host cconstantine/consul-server:0.6 --bootstrap-expect ${var.instance_count} -advertise $private_ipv4 -retry-join n${count.index + 1 % var.instance_count}.${var.instance_name}.${var.domain_suffix} -ui-dir /ui
         ExecStop=/usr/bin/docker kill n${count.index}.coreos
 
     - name: "fleet.service"
@@ -114,13 +131,13 @@ coreos:
 
 
   etcd2:
-    name: "coreos-${count.index}"
-    discovery-srv: "coreos.sillycluster.net"
-    advertise-client-urls: "http://n${count.index}.coreos.sillycluster.net:2379"
-    initial-advertise-peer-urls: "http://n${count.index}.coreos.sillycluster.net:2380"
+    name: "${var.instance_name}-${count.index}"
+    discovery-srv: "${var.discovery_srv}"
+    advertise-client-urls: "http://n${count.index}.${var.instance_name}.${var.domain_suffix}:2379"
+    initial-advertise-peer-urls: "http://n${count.index}.${var.instance_name}.${var.domain_suffix}:2380"
     listen-client-urls: "http://0.0.0.0:2379"
-    listen-peer-urls: "http://n${count.index}.coreos.sillycluster.net:2380"
-    initial-cluster-state: new
+    listen-peer-urls: "http://$private_ipv4:2380"
+    initial-cluster-state: "${var.etcd2_cluster_state}"
     initial-cluster-token: "sillycluster_net"
 
 users:
