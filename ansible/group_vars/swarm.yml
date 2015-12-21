@@ -1,2 +1,0 @@
-rootlike_user: admin
-docker_repo: 'deb https://apt.dockerproject.org/repo debian-jessie main'

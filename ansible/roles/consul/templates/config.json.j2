@@ -4,7 +4,11 @@
     "datacenter": "us-west-2",
     "data_dir": "/var/consul",
     "advertise_addr": "{{ansible_eth0.ipv4.address}}",
+    "ports": {
+        "dns": 53
+    },
     "client_addr": "0.0.0.0"{% if inventory_hostname != groups['swarm'][0] %},
     "start_join": [ "{{ hostvars[groups['swarm'][0]].ansible_eth0.ipv4.address }}" ]
 {% endif %}
+
 }

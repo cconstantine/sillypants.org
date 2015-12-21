@@ -16,7 +16,7 @@
     dest: /etc/consul.json
   register: consul_config
 
-- name: Install Upstart unit for consul
+- name: Install systemd unit for consul
   template: 
     src: consul.service
     dest: /etc/systemd/system/consul.service
@@ -26,5 +26,14 @@
   shell: systemctl daemon-reload && systemctl enable consul.service && systemctl start consul.service
   when: consul_service.changed or consul_config.changed
 
+- name: Install consul as a resolver
+  lineinfile:
+    insertafter: EOF
+    dest: /etc/resolv.conf
+    regexp: "#consul"
+    line: "nameserver {{ ansible_eth0.ipv4.address }} #consul"
+    state: present
+    create: yes
+  register: resolver
 
 

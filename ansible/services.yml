@@ -12,23 +12,6 @@
       with_items:
         - htop
         - awscli
-        - python-setuptools
-        - python-dev
-
-    - name: Install pip
-      easy_install:
-        name: pip
-
-    - name: Python dependency for working with docker
-      pip:
-        name: docker-py
-
-# Install some basic things
-- hosts: sillypants_org
-  sudo: yes
-  roles:
-    - role: tubes
-    - role: docker
 
 - hosts: swarm
   sudo: yes

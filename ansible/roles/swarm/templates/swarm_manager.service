@@ -5,7 +5,7 @@ After=docker.service
 
 [Service]
 Restart=on-failure
-ExecStart=docker run --rm -p 4000:4000 swarm manage -H :4000 --replication --advertise {{inventory_hostname_short}}:4000 consul://{{inventory_hostname_short}}:8500/nodes
+ExecStart=/usr/bin/docker run --rm -p 4000:4000 swarm manage -H :4000 --replication --advertise {{inventory_hostname}}:4000 consul://{{inventory_hostname}}:8500/nodes
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 

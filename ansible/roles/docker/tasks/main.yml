@@ -8,17 +8,18 @@
   apt_repository:
     repo: "{{ docker_repo }}"
 
+#- name: Grab kernel version		
+#  shell: 'uname -r'		
+#  changed_when: false		
+#  register: kernel_version		
+#- name: Install kernal extras		
+#  apt:		
+#    name: 'linux-image-extra-{{kernel_version.stdout}}'
+
 - name: Install Docker
   apt:
     name: docker-engine
         
-- name: Create docker user
-  user:
-    name: docker
-    groups: docker
-    append: true
-    shell: /bin/bash
-
 - name: Listen on tcp
   template:
     src: docker-tcp.service

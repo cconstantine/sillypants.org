@@ -5,7 +5,7 @@
   remote_user: "{{ rootlike_user }}"
   sudo: yes
   tasks:
-  - hostname: name="{{ inventory_hostname_short }}"
+  - hostname: name="{{ inventory_hostname }}"
   - name: Create group for passwordless users
     group:
       name: passwordless_sudo
