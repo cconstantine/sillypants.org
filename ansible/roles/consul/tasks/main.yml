@@ -28,12 +28,15 @@
 
 - name: Install consul as a resolver
   lineinfile:
-    insertafter: EOF
-    dest: /etc/resolv.conf
-    regexp: "#consul"
-    line: "nameserver {{ ansible_eth0.ipv4.address }} #consul"
+    insertbefore: EOF
+    dest: /etc/resolvconf/resolv.conf.d/head
+    regexp: "{{ ansible_eth0.ipv4.address }}"
+    line: "nameserver {{ ansible_eth0.ipv4.address }}"
     state: present
     create: yes
   register: resolver
 
+- name: Restart systemd-resolved.service
+  shell: resolvconf -u
+  when: resolver.changed
 

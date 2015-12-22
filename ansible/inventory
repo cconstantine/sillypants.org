@@ -1,5 +1,6 @@
 [swarm]
 n[0:2].control.sillycluster.net
 
-[debian_jessie:children]
+[ubuntu_15_10:children]
 swarm
+

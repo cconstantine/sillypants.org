@@ -8,13 +8,13 @@
   apt_repository:
     repo: "{{ docker_repo }}"
 
-#- name: Grab kernel version		
-#  shell: 'uname -r'		
-#  changed_when: false		
-#  register: kernel_version		
-#- name: Install kernal extras		
-#  apt:		
-#    name: 'linux-image-extra-{{kernel_version.stdout}}'
+- name: Grab kernel version
+  shell: 'uname -r'
+  changed_when: false
+  register: kernel_version
+- name: Install kernal extras
+  apt:
+    name: 'linux-image-extra-{{kernel_version.stdout}}'
 
 - name: Install Docker
   apt:
@@ -33,5 +33,5 @@
   register: docker_restart
 
 - name: notify systemd of config changes
-  shell: systemctl daemon-reload && systemctl enable docker-tcp.socket && systemctl stop docker && systemctl start docker-tcp.socket && systemctl start docker
+  shell: systemctl daemon-reload && systemctl restart docker
   when: docker_restart.changed

@@ -63,8 +63,8 @@ resource "aws_route53_record" "instance_CNAME" {
 
 resource "aws_instance" "instance" {
 #  ami = "ami-13607c72" #Coreos alpha HVM
-#  ami = "ami-c87769a9" # ubuntu 15_10 hvm
-  ami = "ami-818eb7b1" # debian jessie hvm
+  ami = "ami-c87769a9" # ubuntu 15_10 hvm
+#  ami = "ami-818eb7b1" # debian jessie hvm
   instance_type = "t2.micro"
 	key_name = "${var.keypair}"
   count = "${var.instance_count}"

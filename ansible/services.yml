@@ -13,9 +13,13 @@
         - htop
         - awscli
 
+- hosts: all
+  sudo: yes
+  serial: 1
+  roles:
+    - role: consul
+
 - hosts: swarm
   sudo: yes
   roles:
-    - role: consul
     - role: docker
-    - role: swarm
