@@ -1,7 +1,15 @@
 ---
 
-- name: Install Upstart unit for tubes
-  template: 
-    src: tubes.conf
-    dest: /etc/init/tubes.conf
-  notify: restart tubes
+- name: Install tubes service
+  template:
+    src: tubes.service.j2
+    dest: /etc/systemd/system/tubes.service
+  register: tubes_service
+
+- name: Make sure tubes is registered
+  shell: 'systemctl daemon-reload'
+  when: tubes_service.changed
+
+- name: (Re)start tubes
+  service: name=tubes state=restarted
+  when: tubes_service.changed

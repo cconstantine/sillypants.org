@@ -9,7 +9,7 @@
   file:
     path: /var/consul
     state: directory
-    
+
 - name: Consult config
   template:
     src: config.json.j2
@@ -23,7 +23,11 @@
   register: consul_service
 
 - name: notify systemd of config changes
-  shell: systemctl daemon-reload && systemctl enable consul.service && systemctl start consul.service
+  shell: systemctl daemon-reload && systemctl enable consul.service
+  when: consul_service.changed
+
+- name: Restart consul when config changes
+  shell: systemctl restart consul
   when: consul_service.changed or consul_config.changed
 
 - name: Install consul as a resolver

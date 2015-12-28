@@ -1,0 +1,20 @@
+---
+- stat: path=/bin/etcd
+  register: etcd_bin
+
+- include: install.yml
+  when: etcd_bin.stat.exists == false
+
+- name: Create service file
+  template:
+    src: etcd.service
+    dest: /etc/systemd/system/etcd.service
+  register: etcd_service
+
+- name: notify systemd of config changes
+  shell: "{{item}}"
+  with_items:
+    - "systemctl daemon-reload"
+    - "systemctl enable etcd.service"
+    - "systemctl restart etcd"
+  when: etcd_service.changed

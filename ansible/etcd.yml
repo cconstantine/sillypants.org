@@ -1,0 +1,5 @@
+
+- hosts: swarm
+  sudo: yes
+  roles:
+    - role: etcd
