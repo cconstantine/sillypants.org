@@ -31,4 +31,14 @@
       key: "{{ lookup('file', item) }}"
     with_fileglob:
       - ssh_keys/*.pub
-      
+
+  - name: Update sources
+    apt:
+      update_cache: true
+
+  - name: Install some basic tools
+    apt:
+      name: "{{ item }}"
+    with_items:
+      - htop
+      - awscli

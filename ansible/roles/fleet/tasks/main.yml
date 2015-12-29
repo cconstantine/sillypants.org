@@ -1,0 +1,28 @@
+---
+- stat: path=/bin/fleetd
+  register: fleetd_bin
+
+- include: install.yml
+  when: fleetd_bin.stat.exists == false
+
+- name: Create service file
+  template:
+    src: fleet.service
+    dest: /etc/systemd/system/fleet.service
+  register: fleet_service
+
+- name: Create socket service file
+  template:
+    src: fleet.socket
+    dest: /etc/systemd/system/fleet.socket
+  register: fleet_socket
+
+
+- name: notify systemd of config changes
+  shell: "{{item}}"
+  with_items:
+    - "systemctl daemon-reload"
+    - "systemctl enable fleet.socket"
+    - "systemctl enable fleet.service"
+    - "systemctl restart fleet"
+  when: fleet_service.changed or fleet_service.changed

@@ -1,6 +1,6 @@
-[swarm]
+[control]
 n[0:2].control.sillycluster.net
 
 [ubuntu_15_10:children]
-swarm
+control
 

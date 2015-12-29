@@ -12,7 +12,7 @@ Environment=ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
 Environment=ETCD_INITIAL_ADVERTISE_PEER_URLS=http://{{inventory_hostname}}:2380
 
 {% set comma = joiner(",") %}
-Environment=ETCD_INITIAL_CLUSTER={% for item in groups.swarm %}{{ comma() }}{{item}}=http://{{item}}:2380{% endfor %}
+Environment=ETCD_INITIAL_CLUSTER={% for item in groups.control %}{{ comma() }}{{item}}=http://{{item}}:2380{% endfor %}
 
 
 Restart=on-failure

@@ -1,0 +1,12 @@
+[Unit]
+Description=fleet daemon
+
+After=etcd.service
+
+Wants=fleet.socket
+After=fleet.socket
+
+[Service]
+ExecStart=/bin/fleetd
+Restart=always
+RestartSec=10s

@@ -1,5 +1,0 @@
-- hosts: swarm
-  sudo: yes
-  gather_facts: false
-  roles:
-    - role: tubes

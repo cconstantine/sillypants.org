@@ -1,26 +1,12 @@
-
-# Install some basic things
-- hosts: all
-  sudo: yes
-  tasks:
-    - name: Update sources
-      apt:
-        update_cache: true
-    - name: Install some basic tools
-      apt:
-        name: "{{ item }}"
-      with_items:
-        - htop
-        - awscli
-
-- hosts: all
+- hosts: control
   sudo: yes
   serial: 1
   roles:
     - role: consul
 
-- hosts: swarm
+- hosts: control
   sudo: yes
   roles:
     - role: etcd
+    - role: fleet
     - role: docker

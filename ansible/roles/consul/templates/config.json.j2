@@ -1,5 +1,5 @@
 {
-    "bootstrap_expect": {{ groups.swarm|length }},
+    "bootstrap_expect": {{ groups.control|length }},
     "server": true,
     "datacenter": "us-west-2",
     "data_dir": "/var/consul",
@@ -10,5 +10,5 @@
     "addresses": {
         "dns": "{{ansible_eth0.ipv4.address}}"
     },
-    "retry_join": [ "{{ hostvars[groups.swarm[(groups.swarm.index(inventory_hostname) + 1) % groups.swarm|length ]].ansible_eth0.ipv4.address }}" ]
+    "retry_join": [ "{{ hostvars[groups.control[(groups.control.index(inventory_hostname) + 1) % groups.control|length ]].ansible_eth0.ipv4.address }}" ]
 }
