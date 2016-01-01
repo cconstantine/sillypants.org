@@ -12,3 +12,4 @@
       fleet_type: control
     - role: flannel
     - role: docker
+    - role: registrator

@@ -1,0 +1,11 @@
+[Unit]
+Description=registrator daemon
+
+After=docker.service
+
+[Service]
+ExecStart=/usr/bin/docker run --name=registrator --rm --net=host --volume=/var/run/docker.sock:/tmp/docker.sock gliderlabs/registrator:latest -internal consul://localhost:8500
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+- name: Service file
+  template:
+    src: registrator.service
+    dest: /etc/systemd/system/registrator.service
+  register: registrator_service
+
+- name: notify systemd of config changes
+  shell: "{{item}}"
+  with_items:
+    - "systemctl daemon-reload"
+    - "systemctl enable registrator.service"
+    - "systemctl start registrator.service"
+  when: registrator_service.changed
