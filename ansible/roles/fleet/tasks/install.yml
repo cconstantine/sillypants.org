@@ -16,3 +16,4 @@
 
 - name: Move fleetctl to bin
   command: mv /tmp/fleet-v0.11.5-linux-amd64/fleetctl /bin/fleetctl
+

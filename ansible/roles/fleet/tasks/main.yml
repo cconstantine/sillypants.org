@@ -17,6 +17,12 @@
     dest: /etc/systemd/system/fleet.socket
   register: fleet_socket
 
+- name: Config file
+  template:
+    src: fleet.conf
+    dest: /etc/fleet.conf
+  register: fleet_config
+
 
 - name: notify systemd of config changes
   shell: "{{item}}"
@@ -24,5 +30,9 @@
     - "systemctl daemon-reload"
     - "systemctl enable fleet.socket"
     - "systemctl enable fleet.service"
-    - "systemctl restart fleet"
-  when: fleet_service.changed or fleet_service.changed
+  when: fleet_service.changed or fleet_socket.changed
+
+
+- name: Restart fleet
+  shell: "systemctl restart fleet"
+  when: fleet_service.changed or fleet_socket.changed or fleet_config.changed

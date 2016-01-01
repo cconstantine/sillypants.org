@@ -7,6 +7,6 @@ Wants=fleet.socket
 After=fleet.socket
 
 [Service]
-ExecStart=/bin/fleetd
+ExecStart=/bin/fleetd --config /etc/fleet.conf
 Restart=always
 RestartSec=10s

@@ -9,4 +9,6 @@
   roles:
     - role: etcd
     - role: fleet
+      fleet_type: control
+    - role: flannel
     - role: docker

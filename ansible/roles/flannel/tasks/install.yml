@@ -1,0 +1,14 @@
+---
+- name: Download Flannel
+  get_url:
+    url: https://github.com/coreos/flannel/releases/download/v0.5.5/flannel-0.5.5-linux-amd64.tar.gz
+    dest: /tmp/flannel.tar.gz
+
+- name: unzip flannel
+  unarchive:
+    src: /tmp/flannel.tar.gz
+    dest: /tmp/
+    copy: no
+
+- name: Move flanneld to bin
+  command: mv /tmp/flannel-0.5.5/flanneld /bin/flanneld

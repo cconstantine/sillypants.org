@@ -20,11 +20,7 @@
   apt:
     name: docker-engine
 
-- name: Listen on tcp
-  template:
-    src: docker-tcp.service
-    dest: /etc/systemd/system/docker-tcp.socket
-  register: docker_restart
+- file: name="/etc/systemd/system/docker-tcp.socket" state="absent"
 
 - name: Docker service
   template:
